@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'gli'
 require 'dzt'
+require 'pry'
 
 include GLI::App
 

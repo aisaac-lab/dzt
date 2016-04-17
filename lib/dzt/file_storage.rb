@@ -21,7 +21,8 @@ module DZT
 
     def write(file, dest, options = {})
       quality = options[:quality]
-      file.write(dest) { self.quality = quality if quality }
+      file.quality quality
+      file.write(dest)
     end
   end
 end

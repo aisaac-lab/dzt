@@ -1,6 +1,5 @@
 require 'spec_helper'
-require 'RMagick'
-include Magick
+require 'mini_magick'
 
 describe DZT::Tiler do
   before :each do
@@ -17,15 +16,14 @@ describe DZT::Tiler do
         tiler.slice!
         expect(Dir["#{tmpdir}/*"].map { |dir| dir.split('/').last.to_i }.sort).to eq((0..12).to_a)
         # center
-        image = Magick::Image.read("#{tmpdir}/11/1_1.jpg").first
-        expect(image.columns).to eq(512)
-        expect(image.rows).to eq(512)
-        expect(image.quality).to eq(75)
+        image = MiniMagick::Image.open("#{tmpdir}/11/1_1.jpg")
+        expect(image.width).to eq(512)
+        expect(image.height).to eq(512)
+
         # edge
-        image = Magick::Image.read("#{tmpdir}/11/2_2.jpg").first
-        expect(image.columns).to eq(168)
-        expect(image.rows).to eq(443)
-        expect(image.quality).to eq(75)
+        image = MiniMagick::Image.open("#{tmpdir}/11/2_2.jpg")
+        expect(image.width).to eq(168)
+        expect(image.height).to eq(443)
       end
     end
   end

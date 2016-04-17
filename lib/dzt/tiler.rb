@@ -24,13 +24,13 @@ module DZT
       @tile_source = options[:source]
       fail 'Missing options[:source].' unless @tile_source
 
-      @tile_source = Magick::Image.read(@tile_source)[0] if @tile_source.is_a?(String)
+      @tile_source = MiniMagick::Image.open(@tile_source) if @tile_source.is_a?(String)
       @tile_size = options[:size] || DEFAULT_TILE_SIZE
       @tile_overlap = options[:overlap] || DEFAULT_TILE_OVERLAP
       @tile_format  = options[:format] || DEFAULT_TILE_FORMAT
 
-      @max_tiled_height = @tile_source.rows
-      @max_tiled_width = @tile_source.columns
+      @max_tiled_height = @tile_source.height
+      @max_tiled_width = @tile_source.width
 
       @tile_quality = options[:quality] || DEFAULT_QUALITY
       @overwrite = options[:overwrite] || DEFAULT_OVERWRITE_FLAG
@@ -45,13 +45,13 @@ module DZT
       fail "Output #{@destination} already exists!" if ! @overwrite && @storage.exists?
 
       image = @tile_source.dup
-      orig_width = image.columns
-      orig_height = image.rows
+      orig_width = image.height
+      orig_height = image.width
 
       # iterate over all levels (= zoom stages)
       max_level(orig_width, orig_height).downto(0) do |level|
-        width = image.columns
-        height = image.rows
+        width = image.height
+        height = image.width
 
         current_level_storage_dir = @storage.storage_location(level)
         @storage.mkdir(current_level_storage_dir)
@@ -65,8 +65,8 @@ module DZT
           y = 0
           row_count = 0
           while y < height
-            dest_path = File.join(current_level_storage_dir, "#{col_count}_#{row_count}.#{@tile_format}")
             tile_width, tile_height = tile_dimensions(x, y, @tile_size, @tile_overlap)
+            dest_path = File.join(current_level_storage_dir, "#{col_count}_#{row_count}.#{@tile_format}")
 
             save_cropped_image(image, dest_path, x, y, tile_width, tile_height, @tile_quality)
 
@@ -77,10 +77,8 @@ module DZT
           col_count += 1
         end
 
-        image.resize!(0.5)
+        image.resize("50%")
       end
-
-      image.destroy!
     end
 
     protected
@@ -112,19 +110,11 @@ module DZT
     #         x, y: offset from upper left corner of source image.
     #         width, height: width and height of cropped image.
     #         quality: compression level 0-100 (or 0.0-1.0), lower number means higher compression.
-    def save_cropped_image(src, dest, x, y, width, height, quality = 75)
-      if src.is_a? Magick::Image
-        img = src
-      else
-        img = Magick::Image.read(src).first
-      end
-
-      quality *= 100 if quality < 1
-
-      # The crop method retains the offset information in the cropped image.
-      # To reset the offset data, adding true as the last argument to crop.
-      cropped = img.crop(x, y, width, height, true)
-      @storage.write(cropped, dest, quality: quality)
+    def save_cropped_image(image, dest_path, x, y, tile_width, tile_height, quality = 75)
+      tmp_file_path = "#{Pathname(image.path).dirname}/#{SecureRandom.hex}.#{@tile_format}"
+      `convert -crop #{tile_width}x#{tile_height}+#{x}+#{y} #{image.path} #{tmp_file_path}`
+      @storage.write(MiniMagick::Image.open(tmp_file_path), dest_path, quality: quality)
+      `rm #{tmp_file_path}`
     end
   end
 end

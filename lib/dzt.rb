@@ -1,3 +1,5 @@
+require 'mini_magick'
 require 'RMagick'
 require 'dzt/version'
 require 'dzt/tiler'
+require 'pry'
