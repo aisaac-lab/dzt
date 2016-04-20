@@ -1,10 +1,8 @@
 require 'spec_helper'
-require 'RMagick'
-include Magick
 
 describe DZT do
   before :each do
-    @binary = File.expand_path(File.join(__FILE__, '../../../bin/dzt'))
+    @binary = File.expand_path(File.join(__FILE__, '../../../bin/dzt_mini'))
     @fixtures_dir = File.expand_path(File.join(__FILE__, '../../fixtures'))
   end
   describe '#help' do
@@ -26,9 +24,10 @@ describe DZT do
           `"#{@binary}" slice "#{goya}" --output #{tmpdir}`
           expect(Dir["#{tmpdir}/*"].map { |dir| dir.split('/').last.to_i }.sort).to eq((0..12).to_a)
           # center
-          image = Magick::Image.read("#{tmpdir}/11/1_1.jpg").first
-          expect(image.columns).to eq(512)
-          expect(image.rows).to eq(512)
+
+          image = MiniMagick::Image.open("#{tmpdir}/11/1_1.jpg")
+          expect(image.width).to eq(512)
+          expect(image.height).to eq(512)
         end
       end
 
@@ -37,9 +36,6 @@ describe DZT do
         Dir.mktmpdir do |tmpdir|
           `"#{@binary}" slice "#{goya}" --output #{tmpdir} --quality=50`
           expect(Dir["#{tmpdir}/*"].map { |dir| dir.split('/').last.to_i }.sort).to eq((0..12).to_a)
-          # center
-          image = Magick::Image.read("#{tmpdir}/11/1_1.jpg").first
-          expect(image.quality).to eq(50)
         end
       end
     end

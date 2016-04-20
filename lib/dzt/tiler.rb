@@ -78,6 +78,10 @@ module DZT
         end
 
         image.resize("50%")
+        # size = "#{(image.height/2).ceil}x#{(image.width/2).ceil}"
+        # tmp_file_path = "#{Pathname(image.path).dirname}/#{SecureRandom.hex}.#{@tile_format}"
+        # `convert -define jpeg:size=#{size} -resize #{size} #{image.path} #{tmp_file_path}`
+        # image = MiniMagick::Image.open(tmp_file_path)
       end
     end
 
